@@ -15,6 +15,13 @@ const PRESETS = [
   "A restaurant homepage with hero image and reservation form",
 ];
 
+function getTextContent(msg: { parts: Array<{ type: string; text?: string }> }): string {
+  return msg.parts
+    .filter((p) => p.type === "text" && p.text)
+    .map((p) => p.text)
+    .join("");
+}
+
 export default function Home() {
   const { messages, sendMessage, status, error } = useChat({ chat });
   const [input, setInput] = useState("");
@@ -86,49 +93,52 @@ export default function Home() {
             </div>
           )}
 
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[85%] rounded-2xl px-5 py-3 ${
-                  msg.role === "user"
-                    ? "bg-accent text-white"
-                    : "bg-surface border border-border"
-                }`}
-              >
-                {msg.role === "assistant" ? (
-                  <div className="prose prose-invert max-w-none">
-                    {msg.content.split(/(```[\s\S]*?```)/).map((part, i) => {
-                      if (part.startsWith("```")) {
-                        const lines = part.split("\n");
-                        const lang = lines[0].replace("```", "").trim();
-                        const code = lines.slice(1, -1).join("\n");
+          {messages.map((msg) => {
+            const text = getTextContent(msg);
+            return (
+              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-5 py-3 ${
+                    msg.role === "user"
+                      ? "bg-accent text-white"
+                      : "bg-surface border border-border"
+                  }`}
+                >
+                  {msg.role === "assistant" ? (
+                    <div className="prose prose-invert max-w-none">
+                      {text.split(/(```[\s\S]*?```)/).map((part, i) => {
+                        if (part.startsWith("```")) {
+                          const lines = part.split("\n");
+                          const lang = lines[0].replace("```", "").trim();
+                          const code = lines.slice(1, -1).join("\n");
+                          return (
+                            <div key={i} className="my-3 relative group">
+                              {lang && (
+                                <div className="absolute top-2 right-2 text-xs text-muted bg-background/50 px-2 py-0.5 rounded">
+                                  {lang}
+                                </div>
+                              )}
+                              <pre>
+                                <code>{code}</code>
+                              </pre>
+                            </div>
+                          );
+                        }
                         return (
-                          <div key={i} className="my-3 relative group">
-                            {lang && (
-                              <div className="absolute top-2 right-2 text-xs text-muted bg-background/50 px-2 py-0.5 rounded">
-                                {lang}
-                              </div>
-                            )}
-                            <pre>
-                              <code>{code}</code>
-                            </pre>
-                          </div>
+                          <span key={i} className="whitespace-pre-wrap">
+                            {part}
+                          </span>
                         );
-                      }
-                      return (
-                        <span key={i} className="whitespace-pre-wrap">
-                          {part}
-                        </span>
-                      );
-                    })}
-                    {isLoading && <span className="streaming-cursor" />}
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                )}
+                      })}
+                      {isLoading && <span className="streaming-cursor" />}
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{text}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {error && (
             <div className="text-center text-red-400 text-sm py-4">
