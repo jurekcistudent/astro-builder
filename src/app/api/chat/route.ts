@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     model: mimo("mimo-v2.5-pro"),
     system: systemPrompt,
     messages,
-    maxTokens: 16384,
+    maxOutputTokens: 16384,
     temperature: 0.7,
   });
 
