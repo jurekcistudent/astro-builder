@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, convertToModelMessages } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { systemPrompt } from "@/lib/system-prompt";
 
@@ -10,13 +10,15 @@ const mimo = createOpenAI({
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
+  const modelMessages = await convertToModelMessages(messages);
+
   const result = streamText({
     model: mimo("mimo-v2.5-pro"),
     system: systemPrompt,
-    messages,
+    messages: modelMessages,
     maxOutputTokens: 16384,
     temperature: 0.7,
   });
 
-  return result.toTextStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
